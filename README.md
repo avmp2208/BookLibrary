@@ -30,6 +30,11 @@ or just add it as a service from the builder at program start up
             RegisterEventSubscribers();
     
         }
+     private void RegisterEventSubscribers()
+    {
+        // Example: Register SearchLogger as an event subscriber
+        var searchLogger = new SearchLogger();
+    }
     `
 
 In this project I used only a simple demo of Repository pattern that 
