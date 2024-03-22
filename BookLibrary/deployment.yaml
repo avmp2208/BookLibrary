@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: booklibrary-deployment
+  labels:
+    app: booklibrary-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: booklibrary
+  template:
+    metadata:
+      labels:
+        app: booklibrary
+    spec:
+      containers:
+        - name: booklibrary
+          image: testinacr.azurecr.io/booklibrary
+          ports:
+            - containerPort: 80
