@@ -1,4 +1,5 @@
 using BookLibrary.Data;
+using BookLibrary.Helpers;
 using BookLibrary.Repository;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,8 +17,11 @@ builder.Services.AddDbContext<BookLibraryContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 builder.Services.AddScoped<IRepository, Repository>();
+builder.Services.AddSingleton<SearchLogger>();
+builder.Services.AddMediatR(c => c.RegisterServicesFromAssemblyContaining<Program>());
 
-var  MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+
+const string MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
 builder.Services.AddCors(options =>
 {
@@ -30,6 +34,8 @@ builder.Services.AddCors(options =>
 
 
 var app = builder.Build();
+
+RegisterEventSubscribers(app.Services);
 
 app.UseCors(MyAllowSpecificOrigins);
 
@@ -51,3 +57,11 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.Run();
+
+
+void RegisterEventSubscribers(IServiceProvider serviceProvider)
+{
+    // Retrieve the instance of SearchLogger and subscribe to the BookSearched event
+    var searchLogger = serviceProvider.GetService<SearchLogger>();
+    BookLibrary.Controllers.BookLibrary.BookSearched += searchLogger!.HandleBookSearchedEvent;
+}

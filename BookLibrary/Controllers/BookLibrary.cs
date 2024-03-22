@@ -1,5 +1,6 @@
 ﻿using BookLibrary.Data;
-using BookLibrary.Repository;
+using BookLibrary.Handler;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BookLibrary.Controllers;
@@ -8,11 +9,13 @@ namespace BookLibrary.Controllers;
 [Route("[controller]")]
 public class BookLibrary : ControllerBase
 {
-    private readonly IRepository _repository;
+    public delegate void BookSearchedEventHandler(object sender, SearchModel query);
+    public static event BookSearchedEventHandler? BookSearched;
+    private readonly IMediator _mediator;
 
-    public BookLibrary(IRepository repository)
+    public BookLibrary(IMediator mediator)
     {
-        _repository = repository;
+        _mediator = mediator;
     }
 
 
@@ -21,12 +24,20 @@ public class BookLibrary : ControllerBase
     [Route("GetBookList")]
     public async Task<ActionResult<List<Book>?>> GetBookList([FromQuery] SearchModel query)
     {
-        var bookList = await _repository.GetBookList(query.SearchBy, query.Value);
+        OnBookSearched(query);
+
+
+        var bookList = await _mediator.Send(query);
         if (!bookList.Any())
         {
             return NotFound();
         }
+
         return bookList;
     }
-   
+
+    protected virtual void OnBookSearched(SearchModel searchQuery)
+    {
+        BookSearched?.Invoke(this, searchQuery);
+    }
 }
